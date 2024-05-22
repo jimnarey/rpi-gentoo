@@ -11,6 +11,15 @@
 
 # stage3-arm64-openrc-20240519T234838Z.tar.xz
 
+# TODO - 
+# Remove temp files; add something to home partition
+# Enable setting of locales on image creation
+# Enable setting of root password on image creation
+# Enable setting of hostname on image creation
+# Setup Gentoo repo
+# Set USE variables
+# Update @world set
+
 if [ "$EUID" -ne 0 ]; then
     echo "This script must be run as superuser (root)."
     exit 1
@@ -109,6 +118,12 @@ cd $TEMP_DIR
 echo "Extracting the stage3 file..."
 tar xpf stage3-*.tar.xz --xattrs-include='*.*' --numeric-owner
 
+echo "Deleting the stage3 file..."
+rm stage3-*.tar.xz
+
+echo "Changing directory to the home mount point..."
+cd $TEMP_DIR/home
+
 echo "Clone RPi firmware repository..."
 git clone --depth=1 https://github.com/raspberrypi/firmware
 
@@ -135,14 +150,13 @@ ln -s brcmfmac43455-sdio.bin brcmfmac43455-sdio.raspberrypi,5-model-b.bin
 ln -s brcmfmac43455-sdio.clm_blob brcmfmac43455-sdio.raspberrypi,5-model-b.clm_blob
 ln -s brcmfmac43455-sdio.txt brcmfmac43455-sdio.raspberrypi,5-model-b.txt
 
-echo "Changing directory back to the root mount point..."
-cd $TEMP_DIR
+echo "Changing directory back to the home mount point..."
+cd $TEMP_DIR/home
 
 echo "Clone bluetooth firmware repository..."
 git clone --depth=1 https://github.com/RPi-Distro/bluez-firmware.git
 
 echo "Copy the bluetooth firmware files to the firmware directory..."
-mkdir -p $TEMP_DIR/lib/firmware/brcm
 cp bluez-firmware/debian/firmware/broadcom/BCM4345C0.hcd $TEMP_DIR/lib/firmware/brcm/
 
 echo "Create bluetooth firmware symbolic link..."
@@ -179,6 +193,10 @@ echo "PermitRootLogin yes" >> $TEMP_DIR/etc/ssh/sshd_config
 echo "Start the ssh service on boot..."
 cd $TEMP_DIR/etc/runlevels/default/
 ln -s /etc/init.d/sshd sshd
+
+echo "Add init scripts..."
+cp $CURRENT_DIR/init-scripts/*.start $TEMP_DIR/etc/local.d/
+chmod +x $TEMP_DIR/etc/local.d/*.start
 
 echo "Unmount everything..."
 cd $CURRENT_DIR
