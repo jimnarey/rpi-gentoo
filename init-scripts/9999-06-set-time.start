@@ -1,0 +1,7 @@
+#!/bin/bash
+
+# Should run on every boot
+
+date -s
+
+echo "Date and time set successfully..."

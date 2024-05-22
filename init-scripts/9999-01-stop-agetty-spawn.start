@@ -1,0 +1,30 @@
+#!/bin/bash
+
+if [ -f "/home/.inittab_patched" ]; then
+    echo "agetty spawn patched in inittab already patched. Exiting..." | tee /dev/kmsg
+    exit 0
+fi
+
+set -e
+
+error-msg() {
+    if [ $? -ne 0 ]; then
+        echo "agetty spawn inittab patch failed. Exiting..." | tee /dev/kmsg
+    fi
+}
+
+trap error-msg EXIT
+
+TARGET_LINE="f0:12345:respawn:/sbin/agetty 9600 ttyAMA0 vt100"
+FILE="/etc/inittab"
+
+if grep -Fxq "$TARGET_LINE" $FILE
+then
+    sed -i "/$TARGET_LINE/s/^/#/" $FILE
+else
+    echo "Error: Line not found in $FILE" | sudo tee /dev/kmsg
+fi
+
+touch /home/.inittab_patched
+
+echo "agetty spawn patched in inittab successfully..." | tee /dev/kmsg

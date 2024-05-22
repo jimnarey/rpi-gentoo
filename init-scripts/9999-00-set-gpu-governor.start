@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# Should run on every boot
+
+CURRENT_GOVERNOR=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor)
+
+if [ "$CURRENT_GOVERNOR" != "schedutil" ]; then
+    echo "Setting CPU governor to schedutil"  | tee /dev/kmsg 
+    echo schedutil > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
+fi
+
+echo "CPU governor set successfully..."  | tee /dev/kmsg

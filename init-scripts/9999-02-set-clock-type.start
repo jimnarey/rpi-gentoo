@@ -1,0 +1,23 @@
+#!/bin/bash
+
+if [ -f "/home/.clock_set" ]; then
+    echo "Software clock already set. Exiting..." | tee /dev/kmsg
+    exit 0
+fi
+
+set -e
+
+error-msg() {
+    if [ $? -ne 0 ]; then
+        echo "Software clock set failed. Exiting..." | tee /dev/kmsg
+    fi
+}
+
+trap error-msg EXIT
+
+rc-update add swclock boot
+rc-update del hwclock boot
+
+touch /home/.clock_set
+
+echo "Software clock set successfully..." | tee /dev/kmsg

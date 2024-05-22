@@ -1,0 +1,27 @@
+#!/bin/bash
+
+if [ -f "/home/.sys_libs_timezone_set" ]; then
+    echo "sys-libs timezone already set. Exiting..." | tee /dev/kmsg
+    exit 0
+fi
+
+set -e
+
+error-msg() {
+    if [ $? -ne 0 ]; then
+        echo "Setting sys-libs timezone failed. Exiting..." | tee /dev/kmsg
+    fi
+}
+
+trap error-msg EXIT
+
+if ! command -v emerge &> /dev/null; then
+    echo "Command 'emerge' not found..." | tee /dev/kmsg
+    exit 1
+fi
+
+emerge --config sys-libs/timezone-data
+
+touch /home/.sys_libs_timezone_set
+
+echo "sys-libs timezone set successfully..." | tee /dev/kmsg

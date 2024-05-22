@@ -1,0 +1,31 @@
+#!/bin/bash
+
+if [ -f "/home/.locales_set" ]; then
+    echo "Locales already set. Exiting..." | tee /dev/kmsg
+    exit 0
+fi
+
+set -e
+
+error-msg() {
+    if [ $? -ne 0 ]; then
+        echo "Setting locales failed. Exiting..." | tee /dev/kmsg
+    fi
+}
+
+trap error-msg EXIT
+
+echo "en_GB ISO-8859-1" >> /etc/locale.gen
+echo "en_GB.UTF-8 UTF-8" >> /etc/locale.gen
+
+locale-gen
+
+echo 'LANG="de_GB.UTF-8"' > /etc/env.d/02locale
+echo 'LC_COLLATE="C.UTF-8"' >> /etc/env.d/02locale
+echo 'LC_CTYPE=de_DE.UTF-8' >> /etc/env.d/02locale
+
+env-update
+
+touch /home/.locales_set
+
+echo "Locales set successfully." | tee /dev/kmsg

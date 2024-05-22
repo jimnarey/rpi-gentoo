@@ -1,0 +1,22 @@
+#!/bin/bash
+
+if [ -f "/home/.timezone_set" ]; then
+    echo "Timezone already set. Exiting..." | tee /dev/kmsg
+    exit 0
+fi
+
+set -e
+
+error-msg() {
+    if [ $? -ne 0 ]; then
+        echo "Setting timezone failed. Exiting..." | tee /dev/kmsg
+    fi
+}
+
+trap error-msg EXIT
+
+echo "Europe/London" > /etc/timezone
+
+touch /home/.timezone_set
+
+echo "Timezone set successfully..." | tee /dev/kmsg
