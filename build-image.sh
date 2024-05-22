@@ -11,9 +11,7 @@
 
 # stage3-arm64-openrc-20240519T234838Z.tar.xz
 
-# TODO - 
-# Remove temp files; add something to home partition
-# Enable setting of locales on image creation
+# TODO -
 # Enable setting of root password on image creation
 # Enable setting of hostname on image creation
 # Setup Gentoo repo
@@ -167,6 +165,9 @@ echo "dwc_otg.lpm_enable=0 console=tty root=/dev/mmcblk0p4 rootfstype=ext4 rootw
 
 echo "Create config.txt..."
 echo -e "# If using arm64 on a Pi3, select a 64 bit kernel\narm_64bit=1\n\n# have a properly sized image\ndisable_overscan=1\n\n# Enable audio (loads snd_bcm2835)\ndtparam=audio=on" > $TEMP_DIR/boot/config.txt
+
+echo "Remove downloaded kernel and firmware files..."
+rm -rf $TEMP_DIR/home/*
 
 echo "Create /etc/fstab..."
 cat << EOF > $TEMP_DIR/etc/fstab
