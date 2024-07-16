@@ -20,7 +20,7 @@ FILE="/etc/inittab"
 
 if grep -Fxq "$TARGET_LINE" $FILE
 then
-    sed -i "/$TARGET_LINE/s/^/#/" $FILE
+    sed -i "s|$TARGET_LINE|#&|" $FILE
 else
     echo "Error: Line not found in $FILE" | sudo tee /dev/kmsg
 fi
