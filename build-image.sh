@@ -35,7 +35,29 @@ fi
 
 set -e
 
+SWAP_SIZE=2048
+ROOT_SIZE=8192
+HOME_SIZE=2048
+
+# Parse options
+while getopts "s:r:u:" opt; do
+  case $opt in
+    s) SWAP_SIZE=$OPTARG ;;
+    r) ROOT_SIZE=$OPTARG ;;
+    u) HOME_SIZE=$OPTARG ;;
+    \?) echo "Invalid option -$OPTARG" >&2
+        exit 1
+        ;;
+  esac
+done
+
+# Debug: Print the values to verify (Optional)
+echo "SWAP_SIZE: $SWAP_SIZE"
+echo "ROOT_SIZE: $ROOT_SIZE"
+echo "HOME_SIZE: $HOME_SIZE"
+
 cleanup() {
+    set +e
     cd $CURRENT_DIR
     echo "Clean up..."
     if [ -n "$LOOP_DEVICE" ]; then
@@ -44,28 +66,32 @@ cleanup() {
         echo "Remove device mappings..."
         kpartx -d "$LOOP_DEVICE"
     fi
+
+    echo "Kill processes..."
+    fuser -k ${TEMP_DIR} || true
+    echo "Wait..."
+    sleep 2
+
     echo "Unmount everything..."
-    if mountpoint -q "${TEMP_DIR}/dev/shm"; then
-        umount -l ${TEMP_DIR}/dev/shm
-    fi
-    if mountpoint -q "${TEMP_DIR}/dev/pts"; then
-        umount -l ${TEMP_DIR}/dev/pts
-    fi
-    if mountpoint -q "${TEMP_DIR}/sys"; then
-        umount -R ${TEMP_DIR}/sys
-    fi
-    if mountpoint -q "${TEMP_DIR}/proc"; then
-        umount ${TEMP_DIR}/proc
-    fi
-    if mountpoint -q "${TEMP_DIR}/boot"; then
-        umount ${TEMP_DIR}/boot
-    fi
-    if mountpoint -q "${TEMP_DIR}/home"; then
-        umount ${TEMP_DIR}/home
-    fi
-    if mountpoint -q "${TEMP_DIR}"; then
-        umount ${TEMP_DIR}
-    fi
+
+    echo "Unmount dev..."
+    umount -R ${TEMP_DIR}/dev || umount -R -l ${TEMP_DIR}/dev
+
+    echo "Unmount sys..."
+    umount -R ${TEMP_DIR}/sys || umount -R -l ${TEMP_DIR}/sys
+
+    echo "Unmount proc..."
+    umount ${TEMP_DIR}/proc || umount -l ${TEMP_DIR}/proc
+
+    echo "Unmount boot..."
+    umount ${TEMP_DIR}/boot || umount -l ${TEMP_DIR}/boot
+
+    echo "Unmount home..."
+    umount ${TEMP_DIR}/home || umount -l ${TEMP_DIR}/home
+
+    echo "Unmount root..."
+        umount ${TEMP_DIR} || umount -l ${TEMP_DIR}
+
     echo "Remove temporary directory..."
     rmdir $TEMP_DIR
 
@@ -75,14 +101,7 @@ CURRENT_DIR=$(pwd)
 
 trap cleanup EXIT
 
-TOTAL_SIZE=$(($2 * 1024))
-HOME_SIZE=$(($3 * 1024))
-
-if [ $TOTAL_SIZE -le $HOME_SIZE ]; then
-    echo "Total size must be greater than the home partition size."
-    echo "Usage: $0 <image_file_name> <total_size_in_GB> <home_partition_size_in_GB>"
-    exit 1
-fi
+TOTAL_SIZE=$(($HOME_SIZE + $ROOT_SIZE + $SWAP_SIZE + 256))
 
 FILENAME=$1
 
@@ -95,9 +114,9 @@ LOOP_DEVICE=$(losetup --show -f $FILENAME)
 echo "Create partition table and partitons..."
 parted $LOOP_DEVICE -- mklabel msdos
 parted $LOOP_DEVICE -- mkpart primary fat32 1MiB 256MiB
-parted $LOOP_DEVICE -- mkpart primary linux-swap 256MiB 8704MiB
-parted $LOOP_DEVICE -- mkpart primary ext4 8704MiB $(($HOME_SIZE + 8704))MiB
-parted $LOOP_DEVICE -- mkpart primary ext4 $(($HOME_SIZE + 8704))MiB 100%
+parted $LOOP_DEVICE -- mkpart primary linux-swap 256MiB $(($SWAP_SIZE + 256))MiB
+parted $LOOP_DEVICE -- mkpart primary ext4 $(($SWAP_SIZE + 256))MiB $(($SWAP_SIZE + $HOME_SIZE + 256))MiB
+parted $LOOP_DEVICE -- mkpart primary ext4 $(($SWAP_SIZE + $HOME_SIZE + 256))MiB 100%
 
 echo "Create loop device mappings..."
 kpartx -a $LOOP_DEVICE
