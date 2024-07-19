@@ -28,16 +28,47 @@ if ! command -v kpartx &> /dev/null; then
     exit 1
 fi
 
+if ! command -v qemu-aarch64-static &> /dev/null; then
+    echo "The qemu-aarch64-static command is not available. Please install it and try again."
+    exit 1
+fi
+
 set -e
 
 cleanup() {
-    echo "Cleaning up..."
+    cd $CURRENT_DIR
+    echo "Clean up..."
     if [ -n "$LOOP_DEVICE" ]; then
-        echo "Detaching loop device $LOOP_DEVICE..."
-        sudo losetup -d "$LOOP_DEVICE"
+        echo "Detach loop device $LOOP_DEVICE..."
+        losetup -d "$LOOP_DEVICE"
+        echo "Remove device mappings..."
+        kpartx -d "$LOOP_DEVICE"
     fi
-    echo "Removing device mappings..."
-    sudo kpartx -d "$LOOP_DEVICE"
+    echo "Unmount everything..."
+    if mountpoint -q "${TEMP_DIR}/dev/shm"; then
+        umount -l ${TEMP_DIR}/dev/shm
+    fi
+    if mountpoint -q "${TEMP_DIR}/dev/pts"; then
+        umount -l ${TEMP_DIR}/dev/pts
+    fi
+    if mountpoint -q "${TEMP_DIR}/sys"; then
+        umount -R ${TEMP_DIR}/sys
+    fi
+    if mountpoint -q "${TEMP_DIR}/proc"; then
+        umount ${TEMP_DIR}/proc
+    fi
+    if mountpoint -q "${TEMP_DIR}/boot"; then
+        umount ${TEMP_DIR}/boot
+    fi
+    if mountpoint -q "${TEMP_DIR}/home"; then
+        umount ${TEMP_DIR}/home
+    fi
+    if mountpoint -q "${TEMP_DIR}"; then
+        umount ${TEMP_DIR}
+    fi
+    echo "Remove temporary directory..."
+    rmdir $TEMP_DIR
+
 }
 
 CURRENT_DIR=$(pwd)
@@ -199,9 +230,23 @@ echo "Add init scripts..."
 cp $CURRENT_DIR/init-scripts/*.start $TEMP_DIR/etc/local.d/
 chmod +x $TEMP_DIR/etc/local.d/*.start
 
-echo "Unmount everything..."
-cd $CURRENT_DIR
-umount $TEMP_DIR/boot
-umount $TEMP_DIR/home
-umount $TEMP_DIR
-rmdir $TEMP_DIR
+mount --types proc /proc ${TEMP_DIR}/proc
+mount --rbind /sys ${TEMP_DIR}/sys
+mount --make-rslave ${TEMP_DIR}/sys
+mount --rbind /dev ${TEMP_DIR}/dev
+mount --make-rslave ${TEMP_DIR}/dev
+
+cp $(which qemu-aarch64-static) ${TEMP_DIR}/usr/bin/
+
+cp /etc/resolv.conf ${TEMP_DIR}/etc/
+
+chroot ${TEMP_DIR} /usr/bin/qemu-aarch64-static /bin/bash <<'EOF'
+source /etc/profile
+export PS1="(chroot) $PS1"
+
+emerge-webrsync
+
+rm /etc/resolv.conf
+
+exit
+EOF
