@@ -1,7 +1,17 @@
 #!/bin/bash
 
-# Should run on every boot
+set -e
 
-date -s
+error-msg() {
+    if [ $? -ne 0 ]; then
+        echo "Setting date and time failed. Exiting..." | tee /dev/kmsg
+    fi
+}
 
-echo "Date and time set successfully..."
+trap error-msg EXIT
+
+DATE_STRING=$(curl -sI http://worldtimeapi.org/api/ip | grep date: | sed 's/date: //I')
+
+date -s "$DATE_STRING"
+
+echo "Date and time set successfully..." | tee /dev/kmsg
