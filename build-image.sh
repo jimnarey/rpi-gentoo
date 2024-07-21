@@ -265,6 +265,12 @@ export PS1="(chroot) $PS1"
 
 emerge-webrsync
 
+eselect news read
+
+eselect news purge
+
+rm /usr/bin/qemu-aarch64-static
+
 rm /etc/resolv.conf
 
 exit
