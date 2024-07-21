@@ -14,9 +14,10 @@
 # TODO -
 # Enable setting of root password on image creation
 # Enable setting of hostname on image creation
-# Setup Gentoo repo
-# Set USE variables
+# Enable setting timezone on image creation (see ...set-time.start for harcoded use of GMT)
+# Review USE variables after work on application(s)
 # Update @world set
+# Fix errant loop devices
 
 if [ "$EUID" -ne 0 ]; then
     echo "This script must be run as superuser (root)."
@@ -249,6 +250,10 @@ echo "Add init scripts..."
 cp $CURRENT_DIR/init-scripts/*.start $TEMP_DIR/etc/local.d/
 chmod +x $TEMP_DIR/etc/local.d/*.start
 
+echo "Add install scripts..."
+cp -rv $CURRENT_DIR/install-scripts $TEMP_DIR/root/
+chmod +x $TEMP_DIR/root/install-scripts/*.sh
+
 mount --types proc /proc ${TEMP_DIR}/proc
 mount --rbind /sys ${TEMP_DIR}/sys
 mount --make-rslave ${TEMP_DIR}/sys
@@ -264,14 +269,14 @@ source /etc/profile
 export PS1="(chroot) $PS1"
 
 emerge-webrsync
-
-eselect news read
-
+eselect news read > /dev/null 2>&1
 eselect news purge
 
-rm /usr/bin/qemu-aarch64-static
+emerge --sync
 
 rm /etc/resolv.conf
 
 exit
 EOF
+
+rm ${TEMP_DIR}/usr/bin/qemu-aarch64-static
