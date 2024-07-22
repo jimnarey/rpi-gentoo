@@ -52,7 +52,6 @@ while getopts "s:r:u:" opt; do
   esac
 done
 
-# Debug: Print the values to verify (Optional)
 echo "SWAP_SIZE: $SWAP_SIZE"
 echo "ROOT_SIZE: $ROOT_SIZE"
 echo "HOME_SIZE: $HOME_SIZE"
@@ -251,8 +250,12 @@ cp $CURRENT_DIR/init-scripts/*.start $TEMP_DIR/etc/local.d/
 chmod +x $TEMP_DIR/etc/local.d/*.start
 
 echo "Add install scripts..."
-cp -rv $CURRENT_DIR/install-scripts $TEMP_DIR/root/
+cp -r $CURRENT_DIR/install-scripts $TEMP_DIR/root/
 chmod +x $TEMP_DIR/root/install-scripts/*.sh
+
+echo "Add scripts to /usr/local/bin..."
+cp $CURRENT_DIR/bin/*.sh $TEMP_DIR/usr/local/bin/
+chmod +x $TEMP_DIR/usr/local/bin/*.sh
 
 mount --types proc /proc ${TEMP_DIR}/proc
 mount --rbind /sys ${TEMP_DIR}/sys
