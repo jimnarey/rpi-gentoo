@@ -128,10 +128,10 @@ HOME_PARTITION=/dev/mapper/$(basename $LOOP_DEVICE)p3
 ROOT_PARTITION=/dev/mapper/$(basename $LOOP_DEVICE)p4
 
 echo "Formatting the partitions..."
-mkfs.vfat $BOOT_PARTITION
-mkswap $SWAP_PARTITION
-mkfs.ext4 $HOME_PARTITION
-mkfs.ext4 $ROOT_PARTITION
+mkfs.vfat -n BOOT $BOOT_PARTITION
+mkswap -L SWAP $SWAP_PARTITION
+mkfs.ext4 -L HOME $HOME_PARTITION
+mkfs.ext4 -L ROOT $ROOT_PARTITION
 
 TEMP_DIR=$(mktemp -d)
 mount $ROOT_PARTITION $TEMP_DIR
