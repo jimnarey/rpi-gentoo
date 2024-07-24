@@ -60,13 +60,6 @@ cleanup() {
     set +e
     cd $CURRENT_DIR
     echo "Clean up..."
-    if [ -n "$LOOP_DEVICE" ]; then
-        echo "Detach loop device $LOOP_DEVICE..."
-        losetup -d "$LOOP_DEVICE"
-        echo "Remove device mappings..."
-        kpartx -d "$LOOP_DEVICE"
-    fi
-
     echo "Kill processes..."
     fuser -k ${TEMP_DIR} || true
     echo "Wait..."
@@ -90,10 +83,17 @@ cleanup() {
     umount ${TEMP_DIR}/home || umount -l ${TEMP_DIR}/home
 
     echo "Unmount root..."
-        umount ${TEMP_DIR} || umount -l ${TEMP_DIR}
+        umount ${TEMP_DIR} || umount ${TEMP_DIR}
 
     echo "Remove temporary directory..."
     rmdir $TEMP_DIR
+
+    if [ -n "$LOOP_DEVICE" ]; then
+        echo "Detach loop device $LOOP_DEVICE..."
+        losetup -d "$LOOP_DEVICE"
+        echo "Remove device mappings..."
+        kpartx -d "$LOOP_DEVICE"
+    fi
 
 }
 
