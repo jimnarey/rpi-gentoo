@@ -6,7 +6,7 @@ error-msg() {
     echo "Setting date and time failed with status $?. Exiting..." | tee /dev/kmsg >&2
 }
 
-trap error-msg ERR EXIT
+trap error-msg ERR
 
 while [ ! -f "/home/.timezone_set" ]; do
     echo "Waiting for timezone to be set..." | tee /dev/kmsg
