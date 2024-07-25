@@ -257,6 +257,22 @@ echo "Add scripts to /usr/local/bin..."
 cp $CURRENT_DIR/bin/*.sh $TEMP_DIR/usr/local/bin/
 chmod +x $TEMP_DIR/usr/local/bin/*.sh
 
+echo "Add client ssh keys..."
+mkdir -p $TEMP_DIR/root/.ssh
+
+if [[ ! -f "${CURRENT_DIR}/ssh/id_ed25519" || ! -f "${CURRENT_DIR}/ssh/id_ed25519.pub" ]]; then
+    echo "Create new ssh keys..."
+    rm -rf "${CURRENT_DIR}/ssh/"*
+    mkdir -p "${CURRENT_DIR}/ssh"
+    ssh-keygen -t ed25519 -N "" -f "${CURRENT_DIR}/ssh/id_ed25519" -q
+else
+    echo "Use existing ssh keys..."
+fi
+
+cp "${CURRENT_DIR}/ssh/id_ed25519" "${TEMP_DIR}/root/.ssh/"
+cp "${CURRENT_DIR}/ssh/id_ed25519.pub" "${TEMP_DIR}/root/.ssh/"
+
+
 mount --types proc /proc ${TEMP_DIR}/proc
 mount --rbind /sys ${TEMP_DIR}/sys
 mount --make-rslave ${TEMP_DIR}/sys
