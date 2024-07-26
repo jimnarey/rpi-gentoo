@@ -31,6 +31,10 @@ The image includes a `set-datetime.sh` script. Installing packages requires the 
 
 Within `/root/install-scripts` there is an `install-python.sh` script which installs pyenv and Python 10 (the latest version for which there is compatible PyPy version).
 
+## ssh keys
+
+The `build-image.sh` script creates a pair of ssh keys (not password protected), stores them in the project's `ssh` directory and copies them to `/root/.ssh` in the image. If it finds existing keys in the `ssh` directory then it copies these instead. This means the same pair of keys can be preserved between image builds when, for example, a series of images are being used for the same development project. **Please be mindful of the security risks inherent in this approach**.
+
 ## Real-time kernel
 
 A Docker container is used to apply the real-time patches to the kernel source, set the required config options and compile the kernel. To build the container image run:
@@ -74,6 +78,7 @@ However, things start to unravel when attempting to install packages using this 
 - There isn't an option to specify additional config options when the kernel is compiled, or re-compile if options are changed without starting from scratch.
 - The kernel and RT patch versions are hardcoded.
 - Add better usage output to both scripts.
+- Enable control of whether ssh keys are copied over/re-generated
 - Some more trivial things included in comments at the top of `build-image.sh`.
 
 
