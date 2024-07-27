@@ -234,6 +234,10 @@ sed -i '1c\root:$6$xxPVR/Td5iP$/7Asdgq0ux2sgNkklnndcG4g3493kUYfrrdenBXjxBxEsoLne
 echo "Set keymap to UK..."
 echo "keymap=\"dvorak-uk\"" >> $TEMP_DIR/etc/conf.d/keymaps
 
+echo "Enable access to '/dev/dri/card0' by libdrm..."
+echo "" >> $TEMP_DIR/boot/config.txt
+echo "dtoverlay=vc4-kms-v3d" >> $TEMP_DIR/boot/config.txt
+
 echo "Enable ssh for root..."
 echo "PermitRootLogin yes" >> $TEMP_DIR/etc/ssh/sshd_config
 
