@@ -136,11 +136,11 @@ mkfs.ext4 -L ROOT $ROOT_PARTITION
 TEMP_DIR=$(mktemp -d)
 mount $ROOT_PARTITION $TEMP_DIR
 
-echo "Creating temp directory for boot fs and mouting..."
+echo "Creating temp directory for boot fs and mounting..."
 mkdir $TEMP_DIR/boot
 mount $BOOT_PARTITION $TEMP_DIR/boot
 
-echo "Creating temp directory for home fs and mouting..."
+echo "Creating temp directory for home fs and mounting..."
 mkdir $TEMP_DIR/home
 mount $HOME_PARTITION $TEMP_DIR/home
 
@@ -222,11 +222,7 @@ rm -rf $TEMP_DIR/home/*
 echo "Create /etc/fstab..."
 cat << EOF > $TEMP_DIR/etc/fstab
 # <fs>                  <mountpoint>    <type>          <opts>          <dump> <pass>
-#LABEL=boot             /boot           ext4            defaults        1 2
-#UUID=58e72203-57d1-4497-81ad-97655bd56494              /               xfs             defaults                0 1
-#LABEL=swap             none            swap            sw              0 0
-#/dev/cdrom             /mnt/cdrom      auto            noauto,ro       0 0
-/dev/mmcblk0p1          /boot           vfat            noatime,noauto,nodev,nosuid,noexec	1 2
+/dev/mmcblk0p1          /boot           vfat            noatime,nodev,nosuid,noexec	1 2
 /dev/mmcblk0p2          swap            swap            defaults                                0 0
 /dev/mmcblk0p3          /home           ext4            noatime,nodev,nosuid,noexec             0 0
 /dev/mmcblk0p4          /               ext4            noatime                                 0 0
